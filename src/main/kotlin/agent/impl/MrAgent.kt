@@ -8,6 +8,7 @@ import agent.format.ResponseFormat
 import agent.format.TextResponseFormat
 import agent.memory.DefaultMemoryManager
 import agent.memory.MemoryManager
+import agent.memory.SummaryCompressionMemoryStrategy
 import java.nio.file.Path
 import llm.core.LanguageModel
 
@@ -19,6 +20,10 @@ class MrAgent(
         systemPrompt = buildSystemPrompt(
             systemPrompt = systemPrompt,
             responseFormatInstruction = TextResponseFormat.formatInstruction
+        ),
+        memoryStrategy = SummaryCompressionMemoryStrategy(
+            recentMessagesCount = 6,
+            summaryBatchSize = 10
         )
     )
 ) : Agent<String> {

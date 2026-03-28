@@ -1,5 +1,7 @@
 package agent.memory
 
+import agent.memory.model.MemoryState
+import agent.memory.summarizer.ConversationSummarizer
 import agent.storage.JsonConversationStore
 import java.nio.file.Files
 import kotlin.test.Test
@@ -102,6 +104,43 @@ class DefaultMemoryManagerTest {
             manager.currentConversation()
         )
     }
+
+    @Test
+    fun `summary strategy compresses history after assistant response`() {
+        val tempDir = Files.createTempDirectory("memory-manager-test")
+        val store = JsonConversationStore(tempDir.resolve("conversation.json"))
+        val manager = DefaultMemoryManager(
+            languageModel = FakeLanguageModel(),
+            systemPrompt = "Системное сообщение",
+            conversationStore = store,
+            memoryStrategy = SummaryCompressionMemoryStrategy(
+                recentMessagesCount = 2,
+                summaryBatchSize = 2
+            ),
+            summarizer = FixedConversationSummarizer("Сжатый фрагмент")
+        )
+
+        manager.appendUserMessage("u1")
+        manager.appendAssistantMessage("a1")
+        manager.appendUserMessage("u2")
+        manager.appendAssistantMessage("a2")
+        val effectiveContext = manager.appendUserMessage("u3")
+
+        assertEquals(
+            listOf(
+                ChatMessage(role = ChatRole.SYSTEM, content = "Системное сообщение"),
+                ChatMessage(
+                    role = ChatRole.SYSTEM,
+                    content = "Краткое резюме предыдущего диалога:\nСжатый фрагмент"
+                ),
+                ChatMessage(role = ChatRole.USER, content = "u2"),
+                ChatMessage(role = ChatRole.ASSISTANT, content = "a2"),
+                ChatMessage(role = ChatRole.USER, content = "u3")
+            ),
+            effectiveContext
+        )
+        assertEquals(4, manager.currentConversation().size)
+    }
 }
 
 private class FakeLanguageModel : LanguageModel {
@@ -113,10 +152,18 @@ private class FakeLanguageModel : LanguageModel {
     override val tokenCounter = null
 
     override fun complete(messages: List<ChatMessage>): LanguageModelResponse =
-        error("РќРµ РґРѕР»Р¶РµРЅ РІС‹Р·С‹РІР°С‚СЊСЃСЏ РІ СЌС‚РѕРј С‚РµСЃС‚Рµ.")
+        error("Не должен вызываться в этом тесте.")
 }
 
 private class LastMessageOnlyStrategy : MemoryStrategy {
-    override fun messagesForModel(messages: List<ChatMessage>): List<ChatMessage> =
-        messages.takeLast(1)
+    override val id: String = "last_message_only"
+
+    override fun effectiveContext(state: MemoryState): List<ChatMessage> =
+        state.messages.takeLast(1)
+}
+
+private class FixedConversationSummarizer(
+    private val summary: String
+) : ConversationSummarizer {
+    override fun summarize(messages: List<ChatMessage>): String = summary
 }
