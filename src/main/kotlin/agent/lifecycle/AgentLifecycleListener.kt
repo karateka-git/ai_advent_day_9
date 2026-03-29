@@ -15,6 +15,16 @@ interface AgentLifecycleListener {
     fun onModelWarmupFinished()
 
     /**
+     * Вызывается перед отправкой основного запроса в языковую модель.
+     */
+    fun onModelRequestStarted()
+
+    /**
+     * Вызывается после завершения основного запроса в языковую модель.
+     */
+    fun onModelRequestFinished()
+
+    /**
      * Вызывается перед запуском сжатия истории диалога.
      */
     fun onContextCompressionStarted()

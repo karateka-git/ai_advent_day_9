@@ -110,12 +110,7 @@ fun main() {
                 println()
             }
 
-            val response = try {
-                loadingIndicator.start("Ассистент думает")
-                agent.ask(prompt)
-            } finally {
-                loadingIndicator.stop()
-            }
+            val response = agent.ask(prompt)
 
             println()
             println("${ChatRole.ASSISTANT.displayName}: ${response.content}")

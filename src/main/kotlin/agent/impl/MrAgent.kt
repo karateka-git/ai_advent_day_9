@@ -25,7 +25,7 @@ import llm.core.LanguageModel
 class MrAgent(
     private val languageModel: LanguageModel,
     private val systemPrompt: String = DEFAULT_SYSTEM_PROMPT,
-    lifecycleListener: AgentLifecycleListener = NoOpAgentLifecycleListener,
+    private val lifecycleListener: AgentLifecycleListener = NoOpAgentLifecycleListener,
     memoryStrategy: MemoryStrategy = SummaryCompressionMemoryStrategy(
         recentMessagesCount = 2,
         summaryBatchSize = 3,
@@ -55,7 +55,12 @@ class MrAgent(
     override fun ask(userPrompt: String): AgentResponse<String> {
         val preview = previewTokenStats(userPrompt)
         val conversation = memoryManager.appendUserMessage(userPrompt)
-        val modelResponse = languageModel.complete(conversation)
+        val modelResponse = try {
+            lifecycleListener.onModelRequestStarted()
+            languageModel.complete(conversation)
+        } finally {
+            lifecycleListener.onModelRequestFinished()
+        }
         memoryManager.appendAssistantMessage(modelResponse.content)
 
         return AgentResponse(

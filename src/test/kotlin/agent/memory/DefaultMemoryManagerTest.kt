@@ -185,6 +185,10 @@ private class RecordingAgentLifecycleListener : AgentLifecycleListener {
 
     override fun onModelWarmupFinished() = Unit
 
+    override fun onModelRequestStarted() = Unit
+
+    override fun onModelRequestFinished() = Unit
+
     override fun onContextCompressionStarted() {
         contextCompressionStartedCount++
     }

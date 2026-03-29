@@ -14,6 +14,14 @@ class ConsoleAgentLifecycleListener(
         loadingIndicator.stop()
     }
 
+    override fun onModelRequestStarted() {
+        loadingIndicator.start("Ассистент думает")
+    }
+
+    override fun onModelRequestFinished() {
+        loadingIndicator.stop()
+    }
+
     override fun onContextCompressionStarted() {
         loadingIndicator.start("Сжимаем контекст")
     }

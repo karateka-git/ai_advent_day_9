@@ -8,6 +8,10 @@ object NoOpAgentLifecycleListener : AgentLifecycleListener {
 
     override fun onModelWarmupFinished() = Unit
 
+    override fun onModelRequestStarted() = Unit
+
+    override fun onModelRequestFinished() = Unit
+
     override fun onContextCompressionStarted() = Unit
 
     override fun onContextCompressionFinished(stats: ContextCompressionStats) = Unit
